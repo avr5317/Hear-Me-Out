@@ -1,19 +1,23 @@
-import google.generativeai as genai
+import os
+from dotenv import load_dotenv
+from google import genai
 
-genai.configure(api_key="YOUR_GEMINI_API_KEY")
+load_dotenv()
 
-model = genai.GenerativeModel("gemini-pro")
+client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
 def process_input(text):
 
     instruction = f"""
-Process the following user input describing music.
-Rewrite it clearly and descriptively.
+Rewrite this music description clearly and descriptively.
 
 INPUT:
 {text}
 """
 
-    response = model.generate_content(instruction)
+    response = client.models.generate_content(
+        model="gemini-2.0-flash",
+        contents=instruction
+    )
 
     return response.text

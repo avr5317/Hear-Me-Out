@@ -1,0 +1,4 @@
+bpm=124
+temperature=1.2
+duration=12
+output_file=lyria_output.wav

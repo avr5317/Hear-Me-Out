@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AI Music Input</title>
+</head>
+
+<body>
+
+<h2>Describe your music</h2>
+
+<input id="textInput" type="text" placeholder="dark cinematic piano music" size="40">
+<button onclick="sendText()">Generate</button>
+
+<p id="result"></p>
+
+<script>
+
+async function sendText() {
+
+    const text = document.getElementById("textInput").value;
+
+    const response = await fetch("http://127.0.0.1:8000/process", {
+
+        method: "POST",
+
+        headers: {
+            "Content-Type": "application/json"
+        },
+
+        body: JSON.stringify({
+            text: text
+        })
+    });
+
+    const data = await response.json();
+
+    document.getElementById("result").innerText =
+        "PDF generated: " + data.pdf;
+
+}
+
+</script>
+
+</body>
+</html>
