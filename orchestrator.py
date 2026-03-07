@@ -15,8 +15,9 @@ class Orchestrator:
 
     STAGES = ["narrative", "analyze", "generate", "document"]
 
-    def __init__(self, user_input: str):
+    def __init__(self, user_input: str, generator: str = "eleven"):
         self.context = PipelineContext(user_input)
+        self.generator = generator
 
     def run_full_cycle(self):
         """Execute all pipeline stages in sequence."""
@@ -35,7 +36,11 @@ class Orchestrator:
         return self
 
     def generate_audio(self):
-        generate_music(self.context)
+        if self.generator == "eleven":
+            from eleven_generator import generate_music_eleven
+            generate_music_eleven(self.context)
+        else:
+            generate_music(self.context)
         return self
 
     def generate_document(self):

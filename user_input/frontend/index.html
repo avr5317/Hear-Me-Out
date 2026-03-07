@@ -19,7 +19,7 @@ async function sendText() {
 
     const text = document.getElementById("textInput").value;
 
-    const response = await fetch("http://127.0.0.1:8000/process", {
+    const response = await fetch("/process", {
 
         method: "POST",
 
@@ -35,7 +35,10 @@ async function sendText() {
     const data = await response.json();
 
     document.getElementById("result").innerText =
-        "PDF generated: " + data.pdf;
+        "Audio: " + data.audio_file + "\nPDF: " + data.pdf_file +
+        "\nGenre: " + data.musical_features.genre +
+        " | Mood: " + data.musical_features.mood +
+        " | Tempo: " + data.musical_features.tempo + " BPM";
 
 }
 

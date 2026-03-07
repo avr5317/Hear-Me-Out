@@ -1,3 +1,4 @@
+import os
 from orchestrator import Orchestrator
 
 
@@ -33,7 +34,8 @@ def main():
         print("No input provided. Exiting.")
         return
 
-    orchestrator = Orchestrator(user_input)
+    generator = os.environ.get("MUSIC_GENERATOR", "eleven")
+    orchestrator = Orchestrator(user_input, generator=generator)
 
     print("\nGenerating initial composition...")
     context = orchestrator.run_full_cycle()

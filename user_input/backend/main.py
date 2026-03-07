@@ -3,12 +3,21 @@ import os
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 
+from pathlib import Path
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 from orchestrator import Orchestrator
 
 app = FastAPI()
+
+FRONTEND_DIR = Path(__file__).resolve().parent.parent / "frontend"
+
+
+@app.get("/", response_class=HTMLResponse)
+def serve_frontend():
+    return (FRONTEND_DIR / "index.html").read_text()
 
 app.add_middleware(
     CORSMiddleware,
@@ -25,6 +34,7 @@ sessions: dict[str, Orchestrator] = {}
 class ProcessRequest(BaseModel):
     text: str
     session_id: str = "default"
+    generator: str = "eleven"
 
 
 class FeedbackRequest(BaseModel):
@@ -35,7 +45,7 @@ class FeedbackRequest(BaseModel):
 @app.post("/process")
 def process(request: ProcessRequest):
     """Start a new pipeline session from user input."""
-    orchestrator = Orchestrator(request.text)
+    orchestrator = Orchestrator(request.text, generator=request.generator)
     context = orchestrator.run_full_cycle()
     sessions[request.session_id] = orchestrator
 

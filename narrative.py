@@ -1,21 +1,21 @@
 import os
-from google import genai
+import anthropic
 from dotenv import load_dotenv
 
 load_dotenv(override=True)
 
 
 def _get_client():
-    api_key = os.environ.get("GEMINI_API_KEY")
+    api_key = os.environ.get("ANTHROPIC_API_KEY")
     if not api_key:
         raise RuntimeError(
-            "GEMINI_API_KEY not set. Add it to your .env file or export it as an environment variable."
+            "ANTHROPIC_API_KEY not set. Add it to your .env file or export it as an environment variable."
         )
-    return genai.Client(api_key=api_key)
+    return anthropic.Anthropic(api_key=api_key)
 
 
 def expand_narrative(context):
-    """Expand user input into a rich narrative context using Gemini.
+    """Expand user input into a rich narrative context using Claude.
 
     On the first iteration, creates a narrative from the original input.
     On subsequent iterations, refines the narrative based on accumulated feedback.
@@ -41,9 +41,10 @@ direction while preserving the core creative intent. Keep it to 2-3 paragraphs.
 
 Feedback: {context.history[-1].get("feedback", "")}"""
 
-    response = client.models.generate_content(
-        model="gemini-2.5-flash",
-        contents=prompt,
+    response = client.messages.create(
+        model="claude-sonnet-4-20250514",
+        max_tokens=1024,
+        messages=[{"role": "user", "content": prompt}],
     )
-    context.narrative = response.text
+    context.narrative = response.content[0].text
     return context
