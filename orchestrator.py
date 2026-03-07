@@ -13,7 +13,7 @@ class Orchestrator:
     and supports iterative refinement through user feedback.
     """
 
-    STAGES = ["narrative", "analyze", "generate", "document"]
+    STAGES = ["narrative", "analyze", "lyrics", "generate", "document"]
 
     def __init__(self, user_input: str, generator: str = "eleven"):
         self.context = PipelineContext(user_input)
@@ -23,6 +23,7 @@ class Orchestrator:
         """Execute all pipeline stages in sequence."""
         self.expand_narrative()
         self.extract_features()
+        self.generate_lyrics()
         self.generate_audio()
         self.generate_document()
         return self.context
@@ -33,6 +34,11 @@ class Orchestrator:
 
     def extract_features(self):
         extract_musical_features(self.context)
+        return self
+
+    def generate_lyrics(self):
+        from lyrics_generator import generate_lyrics
+        generate_lyrics(self.context)
         return self
 
     def generate_audio(self):

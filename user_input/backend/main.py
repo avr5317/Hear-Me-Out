@@ -6,18 +6,27 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 from pathlib import Path
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, FileResponse
 from pydantic import BaseModel
 from orchestrator import Orchestrator
 
 app = FastAPI()
 
 FRONTEND_DIR = Path(__file__).resolve().parent.parent / "frontend"
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 
 
 @app.get("/", response_class=HTMLResponse)
 def serve_frontend():
     return (FRONTEND_DIR / "index.html").read_text()
+
+
+@app.get("/audio/{filename}")
+def serve_audio(filename: str):
+    file_path = PROJECT_ROOT / "output" / filename
+    if not file_path.exists():
+        return {"error": "File not found"}
+    return FileResponse(file_path, media_type="audio/mpeg")
 
 app.add_middleware(
     CORSMiddleware,
@@ -49,12 +58,19 @@ def process(request: ProcessRequest):
     context = orchestrator.run_full_cycle()
     sessions[request.session_id] = orchestrator
 
+    # Build audio URL for the frontend
+    audio_url = None
+    if context.audio_file:
+        audio_url = "/audio/" + Path(context.audio_file).name
+
     return {
         "session_id": request.session_id,
         "iteration": context.iteration,
         "narrative": context.narrative,
+        "lyrics": context.lyrics,
         "musical_features": context.musical_features.to_dict(),
         "audio_file": context.audio_file,
+        "audio_url": audio_url,
         "pdf_file": context.pdf_file,
     }
 
@@ -68,12 +84,18 @@ def refine(request: FeedbackRequest):
 
     context = orchestrator.refine(request.feedback)
 
+    audio_url = None
+    if context.audio_file:
+        audio_url = "/audio/" + Path(context.audio_file).name
+
     return {
         "session_id": request.session_id,
         "iteration": context.iteration,
         "narrative": context.narrative,
+        "lyrics": context.lyrics,
         "musical_features": context.musical_features.to_dict(),
         "audio_file": context.audio_file,
+        "audio_url": audio_url,
         "pdf_file": context.pdf_file,
     }
 

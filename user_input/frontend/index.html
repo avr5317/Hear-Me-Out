@@ -1,48 +1,207 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>AI Music Input</title>
+    <title>AI Music Generator</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #0a0a0a;
+            color: #e0e0e0;
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+        .container { max-width: 700px; margin: 0 auto; }
+        h1 {
+            font-size: 28px;
+            margin-bottom: 8px;
+            color: #fff;
+        }
+        .subtitle {
+            color: #888;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        textarea {
+            width: 100%;
+            height: 120px;
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            color: #e0e0e0;
+            padding: 14px;
+            font-size: 15px;
+            font-family: inherit;
+            resize: vertical;
+        }
+        textarea:focus { outline: none; border-color: #666; }
+        button {
+            margin-top: 14px;
+            padding: 12px 32px;
+            background: #fff;
+            color: #000;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        button:disabled {
+            background: #444;
+            color: #888;
+            cursor: not-allowed;
+        }
+        .status {
+            margin-top: 20px;
+            padding: 14px;
+            background: #1a1a1a;
+            border-radius: 8px;
+            font-size: 14px;
+            color: #aaa;
+            display: none;
+        }
+        .results {
+            margin-top: 30px;
+            display: none;
+        }
+        .section {
+            background: #1a1a1a;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+        .section h3 {
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #888;
+            margin-bottom: 12px;
+        }
+        .features {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .tag {
+            background: #2a2a2a;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            color: #ccc;
+        }
+        .lyrics-text {
+            white-space: pre-wrap;
+            font-size: 15px;
+            line-height: 1.8;
+            color: #ddd;
+        }
+        audio {
+            width: 100%;
+            margin-top: 8px;
+        }
+        .narrative-text {
+            font-size: 14px;
+            line-height: 1.7;
+            color: #aaa;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+    </style>
 </head>
-
 <body>
+    <div class="container">
+        <h1>AI Music Generator</h1>
+        <p class="subtitle">Tell your story — we'll turn it into a song with AI vocals</p>
 
-<h2>Describe your music</h2>
+        <textarea id="storyInput" placeholder="Write your story here... e.g. A young woman gets married after years of waiting. The mood is joyful and festive, like a Bollywood wedding celebration."></textarea>
+        <button id="generateBtn" onclick="generate()">Generate Song</button>
 
-<input id="textInput" type="text" placeholder="dark cinematic piano music" size="40">
-<button onclick="sendText()">Generate</button>
+        <div class="status" id="status"></div>
 
-<p id="result"></p>
+        <div class="results" id="results">
+            <div class="section">
+                <h3>Your Song</h3>
+                <audio id="audioPlayer" controls></audio>
+            </div>
+
+            <div class="section">
+                <h3>Lyrics</h3>
+                <div class="lyrics-text" id="lyricsDisplay"></div>
+            </div>
+
+            <div class="section">
+                <h3>Musical Features</h3>
+                <div class="features" id="featuresDisplay"></div>
+            </div>
+
+            <div class="section">
+                <h3>Narrative</h3>
+                <div class="narrative-text" id="narrativeDisplay"></div>
+            </div>
+        </div>
+    </div>
 
 <script>
+async function generate() {
+    const text = document.getElementById("storyInput").value.trim();
+    if (!text) return;
 
-async function sendText() {
+    const btn = document.getElementById("generateBtn");
+    const status = document.getElementById("status");
+    const results = document.getElementById("results");
 
-    const text = document.getElementById("textInput").value;
+    btn.disabled = true;
+    btn.textContent = "Generating...";
+    status.style.display = "block";
+    status.textContent = "Creating your song... This may take a minute.";
+    results.style.display = "none";
 
-    const response = await fetch("/process", {
+    try {
+        const response = await fetch("/process", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ text: text })
+        });
 
-        method: "POST",
+        if (!response.ok) {
+            const err = await response.text();
+            throw new Error("Server error: " + err);
+        }
 
-        headers: {
-            "Content-Type": "application/json"
-        },
+        const data = await response.json();
 
-        body: JSON.stringify({
-            text: text
-        })
-    });
+        // Audio player
+        if (data.audio_url) {
+            const player = document.getElementById("audioPlayer");
+            player.src = data.audio_url;
+        }
 
-    const data = await response.json();
+        // Lyrics
+        document.getElementById("lyricsDisplay").textContent = data.lyrics || "No lyrics generated";
 
-    document.getElementById("result").innerText =
-        "Audio: " + data.audio_file + "\nPDF: " + data.pdf_file +
-        "\nGenre: " + data.musical_features.genre +
-        " | Mood: " + data.musical_features.mood +
-        " | Tempo: " + data.musical_features.tempo + " BPM";
+        // Features
+        const f = data.musical_features;
+        const tags = [
+            f.genre, f.mood, f.tempo + " BPM", f.scale,
+            f.dynamics, "energy: " + f.energy,
+            ...f.instruments
+        ];
+        document.getElementById("featuresDisplay").innerHTML =
+            tags.map(t => '<span class="tag">' + t + '</span>').join("");
 
+        // Narrative
+        document.getElementById("narrativeDisplay").textContent = data.narrative;
+
+        status.style.display = "none";
+        results.style.display = "block";
+
+    } catch (e) {
+        status.textContent = "Error: " + e.message;
+    }
+
+    btn.disabled = false;
+    btn.textContent = "Generate Song";
 }
-
 </script>
-
 </body>
 </html>

@@ -43,6 +43,7 @@ class PipelineContext:
         self.original_input = user_input
         self.narrative = ""
         self.musical_features = MusicalFeatures()
+        self.lyrics = ""
         self.audio_file = None
         self.pdf_file = None
         self.iteration = 0
@@ -54,6 +55,7 @@ class PipelineContext:
             "iteration": self.iteration,
             "narrative": self.narrative,
             "musical_features": self.musical_features.to_dict(),
+            "lyrics": self.lyrics,
             "audio_file": self.audio_file,
         }
 
