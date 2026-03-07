@@ -1,18 +1,4 @@
-from reportlab.lib.pagesizes import letter
-from reportlab.pdfgen import canvas
+"""Deprecated: PDF generation is now handled by the top-level pdf_generator module.
 
-def create_pdf(text):
-
-    filename = "output.pdf"
-
-    c = canvas.Canvas(filename, pagesize=letter)
-
-    y = 750
-
-    for line in text.split("\n"):
-        c.drawString(100, y, line)
-        y -= 20
-
-    c.save()
-
-    return filename
+Use `from pdf_generator import generate_pdf` instead.
+"""

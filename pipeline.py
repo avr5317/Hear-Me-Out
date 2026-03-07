@@ -1,12 +1,9 @@
-from analyzer import analyze_text
-from generator import generate_music
+"""Compatibility wrapper. The orchestrator is now the primary entry point."""
+
+from orchestrator import Orchestrator
+
 
 def run_pipeline(prompt):
-
-    features = analyze_text(prompt)
-
-    print("Features:", features)
-
-    music_file = generate_music(features)
-
-    return music_file
+    orchestrator = Orchestrator(prompt)
+    context = orchestrator.run_full_cycle()
+    return context.audio_file
